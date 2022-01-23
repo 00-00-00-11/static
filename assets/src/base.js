@@ -1,14 +1,3 @@
-// When the user scrolls down 20px from the top of the document, show the button
-window.onscroll = function () {
-  upbtn = document.querySelector("#up-btn");
-  if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
-		upbtn.style.display = "block";
-  } 
-  else {
-		upbtn.style.display = "none";
-  }
-}
-
 // When the user clicks on the button, scroll to the top of the document
 function topFunction() {
   document.body.scrollTop = 0; // For Safari
@@ -21,6 +10,7 @@ function modalShow(title, body) {
 
 
 function request(data) {
+  if(data.url.startsWith("/")) data.url = "https://api.fateslist.xyz" + data.url
   window.reqData = data
   if(!data.statusCode) {
     data.statusCode = {}
@@ -111,9 +101,3 @@ String.prototype.replaceAllBackup = function(str, newStr){
 		}
 		return this.replace(new RegExp(str, 'g'), newStr);
 };
-
-$.ready(() => {
-  if(window.self == window.top) {
-    document.write("This page cannot be rendered naked")
-  }
-})

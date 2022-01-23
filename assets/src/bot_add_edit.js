@@ -1,8 +1,8 @@
 
 async function submitBot() {
-    try {
-		json = {}
-		errorFields = []
+	try {
+		var json = {}
+		var errorFields = []
 		context.form_values.text.forEach(function (key) {
 	    	el = document.querySelector(`#${key}`)
 	    	json[key] = el.value
@@ -35,8 +35,8 @@ async function submitBot() {
 			modalShow("Error", "This bot doesn't exist on discord or you need to provide a client id")
 			return
 		}
-		json = await res.json()
-		if(!json.bot_public) {
+		jsonP = await res.json()
+		if(!jsonP.bot_public) {
 			modalShow("Error", "This bot is not public")
 			return
 		}
@@ -50,12 +50,12 @@ async function submitBot() {
 			json[key] = document.querySelector(`#${key}`).value
 		})
 
-			tags = document.querySelector("#tags").values
+		tags = document.querySelector("#tags").values
 		toReplace = {
 			tags: document.querySelector("#tags").values,
-			extra_owners: json.extra_owners.replace(" ", "").split(","),
-				features: document.querySelector("#features").values
-			}
+			extra_owners: document.querySelector("#extra_owners").value.replace(" ", "").split(","),
+			features: document.querySelector("#features").values
+		}
 		keys = ["extra_owners", "tags", "features"]
 		keys.forEach(function (key) {
 			json[key] = toReplace[key].filter(x => x !== "")
