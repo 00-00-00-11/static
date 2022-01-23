@@ -1,6 +1,7 @@
 
 async function submitBot() {
 	try {
+		document.querySelector(".btn-save").innerHTML = `${context.mode}ing...`
 		var json = {}
 		var errorFields = []
 		context.form_values.text.forEach(function (key) {
@@ -8,7 +9,7 @@ async function submitBot() {
 	    	json[key] = el.value
 	    	if(el.getAttribute("required") != null && !el.value){
 				errorFields.push(key.replaceAll("_", " "))
-			return
+				return
 	    	}
 		})
 
@@ -19,6 +20,7 @@ async function submitBot() {
 			res = await fetch(`https://api.fateslist.xyz/api/v2/bots/${botId}`)
 			if(res.status == 200) {
 				modalShow("This bot already exists on Fates List")
+				document.querySelector(".btn-save").innerHTML = `${context.mode}`
 				return
 			}
 		}
@@ -33,6 +35,7 @@ async function submitBot() {
 		res = await fetch(`https://discord.com/api/v9/applications/${botId}/rpc`)
 		if(res.status != 200) {
 			modalShow("Error", "This bot doesn't exist on discord or you need to provide a client id")
+			document.querySelector(".btn-save").innerHTML = `${context.mode}`
 			return
 		}
 		jsonP = await res.json()
@@ -43,6 +46,7 @@ async function submitBot() {
 
 		if(errorFields.length > 0) {
 			modalShow("Error", `You must enter a ${errorFields.join(', ')} for your bot!`)
+			document.querySelector(".btn-save").innerHTML = `${context.mode}`
 			return
 		}
 
@@ -74,6 +78,7 @@ async function submitBot() {
 		})
 		if(json.tags.length == 0 || json.tags[0] == "") {
 			modalShow("Error", "You need to select tags for your bot!")
+			document.querySelector(".btn-save").innerHTML = `${context.mode}`
 			return
 		}
 		request({
@@ -84,7 +89,8 @@ async function submitBot() {
 			statusCode: {
 				200: function() {
 					modalShow("Success", "Your bot has been " + mod + ". You will be redirected to it once you dismiss this alert")
-					window.top.location.replace(`https://fateslist.xyz/bot/${json.bot_id}`)
+					document.querySelector(".btn-save").innerHTML = `${context.mode}`
+					window.location.replace(`https://fateslist.xyz/bot/${json.bot_id}`)
 				}
 			}
 		})
@@ -97,7 +103,7 @@ async function submitBot() {
 function deleteBot() {
 	bot_id_prompt = prompt("In order to confirm your request, please enter the Bot ID for your bot", "")
 	if(!bot_id_prompt || bot_id_prompt != context.bot_id) {
-             	// User did not type proper bot id
+        // User did not type proper bot id
 		modalShow("Failed to delete bot", "This bot couldn't be deleted as you did not confirm that you wanted to do this!")
 		return
 	}
