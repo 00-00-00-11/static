@@ -561,10 +561,6 @@ a.btn:not([class*='btn-flat']):not([class*='btn-outline']):enabled:hover {
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.24));
 }
 
-.btn-sm {
-  height: 1.75rem;
-}
-
 
 .modal .btn {
   padding: 0 0.5rem;
@@ -975,14 +971,6 @@ body {
   100% {
     margin-top: 0;
   }
-}
-
-.dropdown-divider {
-  background-color: rgba(0, 0, 0, 0.12);
-  height: 1px;
-  margin: 0.5rem 0;
-  overflow: hidden;
-  border: 0;
 }
 
 .dropdown-item {
@@ -1573,10 +1561,6 @@ textarea.form-control {
   padding-bottom: 1rem !important;
 }
 
-.text-nowrap {
-  white-space: nowrap !important;
-}
-
 .text-center {
   text-align: center !important;
 }
@@ -1611,11 +1595,6 @@ a.text-dark:hover, a.text-dark:focus, a.text-dark:active {
 
 .text-dark {
   color: #424242 !important;
-}
-
-.text-break {
-  word-break: break-word !important;
-  word-wrap: break-word !important;
 }
 
 [class*='material-icons'] {

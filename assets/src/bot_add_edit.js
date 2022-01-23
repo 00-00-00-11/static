@@ -1,63 +1,93 @@
-function submitBot() {
+
+async function submitBot() {
     try {
-	json = {}
-	errorFields = []
-	context.form_values.text.forEach(function (key) {
-	    el = document.querySelector(`#${key}`)
-	    json[key] = el.value
-	    if(el.getAttribute("required") != null && !el.value){
-		errorFields.push(key.replaceAll("_", " "))
-		return
-	    }
-	})
+		json = {}
+		errorFields = []
+		context.form_values.text.forEach(function (key) {
+	    	el = document.querySelector(`#${key}`)
+	    	json[key] = el.value
+	    	if(el.getAttribute("required") != null && !el.value){
+				errorFields.push(key.replaceAll("_", " "))
+			return
+	    	}
+		})
 
-	if(errorFields.length > 0) {
-		modalShow("Error", `You must enter a ${errorFields.join(', ')} for your bot!`)
-		return
-	}
+		botId = json["bot_id"]
 
-	context.form_values.select_single.forEach(function (key) {
-	    json[key] = document.querySelector(`#${key}`).value
-	})
-
-    	tags = document.querySelector("#tags").values
-	toReplace = {
-	    tags: document.querySelector("#tags").values,
-	    extra_owners: json.extra_owners.replace(" ", "").split(","),
-            features: document.querySelector("#features").values
-        }
-	keys = ["extra_owners", "tags", "features"]
-	keys.forEach(function (key) {
-	    json[key] = toReplace[key].filter(x => x !== "")
-	})
-	if(context.mode == "edit") {
-	    json.bot_id = context.bot_id
-	    method = "PATCH"
-	    mod = "editted successfully!"
-	}
-	else {
-	    method = "PUT"
-	    mod = "added to our queue"
-	}
-	context.form_values.select_multiple.forEach(function (key) {
-		json[key] = document.querySelector(`#${key}`).values
-	})
-	if(json.tags.length == 0 || json.tags[0] == "") {
-	    modalShow("Error", "You need to select tags for your bot!")
-	    return
-	}
-	request({
-		url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
-		method: method,
-		userAuth: true,
-		json: json,
-		statusCode: {
-			200: function() {
-				modalShow("Success", "Your bot has been " + mod + ". You will be redirected to it once you dismiss this alert")
-				window.top.location.replace(`https://fateslist.xyz/bot/${json.bot_id}`)
+		// Check if it exists
+		if(context.mode == "add") {
+			res = await fetch(`https://api.fateslist.xyz/api/v2/bots/${botId}`)
+			if(res.status == 200) {
+				modalShow("This bot already exists on Fates List")
+				return
 			}
 		}
-	})
+
+		// Check if the bot is public
+		clientId = json["client_id"]
+
+		if(clientId) {
+			botId = clientId
+		}
+
+		res = await fetch(`https://discord.com/api/v9/applications/${botId}/rpc`)
+		if(res.status != 200) {
+			modalShow("Error", "This bot doesn't exist on discord or you need to provide a client id")
+			return
+		}
+		json = await res.json()
+		if(!json.bot_public) {
+			modalShow("Error", "This bot is not public")
+			return
+		}
+
+		if(errorFields.length > 0) {
+			modalShow("Error", `You must enter a ${errorFields.join(', ')} for your bot!`)
+			return
+		}
+
+		context.form_values.select_single.forEach(function (key) {
+			json[key] = document.querySelector(`#${key}`).value
+		})
+
+			tags = document.querySelector("#tags").values
+		toReplace = {
+			tags: document.querySelector("#tags").values,
+			extra_owners: json.extra_owners.replace(" ", "").split(","),
+				features: document.querySelector("#features").values
+			}
+		keys = ["extra_owners", "tags", "features"]
+		keys.forEach(function (key) {
+			json[key] = toReplace[key].filter(x => x !== "")
+		})
+		if(context.mode == "edit") {
+			json.bot_id = context.bot_id
+			method = "PATCH"
+			mod = "editted successfully!"
+		}
+		else {
+			method = "PUT"
+			mod = "added to our queue"
+		}
+		context.form_values.select_multiple.forEach(function (key) {
+			json[key] = document.querySelector(`#${key}`).values
+		})
+		if(json.tags.length == 0 || json.tags[0] == "") {
+			modalShow("Error", "You need to select tags for your bot!")
+			return
+		}
+		request({
+			url: `/api/users/${context.user_id}/bots/${json.bot_id}`,
+			method: method,
+			userAuth: true,
+			json: json,
+			statusCode: {
+				200: function() {
+					modalShow("Success", "Your bot has been " + mod + ". You will be redirected to it once you dismiss this alert")
+					window.top.location.replace(`https://fateslist.xyz/bot/${json.bot_id}`)
+				}
+			}
+		})
     }
     catch(err) {
     	alert(err)
@@ -208,13 +238,22 @@ function autofillBot() {
 	function qs(q) {
 		return document.querySelector(q)
 	}
-	bot_id = qs("#bot_id").value
-	if(!bot_id) {
+	botId = qs("#bot_id").value
+
+	clientId = qs("#client_id").value
+
+	// If client id is set, use that
+	if(clientId) {
+		botId = clientId
+	}
+
+	if(!botId) {
 		return
 	}
+
 	jQuery.ajax({
 		method: "GET",
-		url: `https://discord.com/api/v9/applications/${bot_id}/rpc`,
+		url: `https://discord.com/api/v9/applications/${botId}/rpc`,
 		statusCode: {
 			200: function(data) {
 				if(!data.bot_public) {
@@ -227,15 +266,37 @@ function autofillBot() {
 				if(data.custom_install_url) qs("#invite").value = data.custom_install_url
 				if(data.slug) qs("#vanity").value = data.slug.toLowerCase()
 				else qs("#vanity").value = data.name.replaceAll(" ", "").toLowerCase()
+				if(data.tags) {
+					data.tags.forEach(e => {
+						qs("#tags").values.push(e)
+					})
+					qs("#tags").disable()
+					document.querySelectorAll("label").forEach(e => {
+						if(e.getAttribute("for") == "tags") {
+							e.textContent = "Tags (already autocompleted)"
+						}
+					})
+				}
 				modalShow("Autofill Done", "We've autofilled as much of what we could find on your bots application!")
 			},
-			404: function(data) {
+			400: function(data) {
 				modalShow("This bot does not exist!", "Please check the bot id you inputted")
 			}
 
 		}
 	})
 
+}
+
+function resetTags() {
+	// First fix label
+	document.querySelectorAll("label").forEach(e => {
+		if(e.getAttribute("for") == "tags") {
+			e.innerHTML = 'Tags <span style="color: red; font-weight: bold" aria-hidden="true">*</span>'
+		}
+	})
+	document.querySelector("#tags").enable()
+	modalShow("Done", "Feel free to change tags now but be aware this may be buggy")
 }
 
 
