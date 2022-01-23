@@ -111,3 +111,9 @@ String.prototype.replaceAllBackup = function(str, newStr){
 		}
 		return this.replace(new RegExp(str, 'g'), newStr);
 };
+
+$.ready(() => {
+  if(window.self == window.top) {
+    document.write("This page cannot be rendered naked")
+  }
+})
